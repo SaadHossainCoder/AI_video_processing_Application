@@ -29,10 +29,10 @@ def download_youtube_audio(url: str) -> str:
     return filename
 
 
-download_audio_file = download_youtube_audio(
-    "https://youtu.be/s9w3gtgvNSU?si=DqJUOoQemt_vL3x5"
-)
-print(download_audio_file)
+# download_audio_file = download_youtube_audio(
+#     "https://youtu.be/s9w3gtgvNSU?si=DqJUOoQemt_vL3x5"
+# )
+# print(download_audio_file)
 
 # convert the audio in wav & change the frame rate 16000
 def convert_to_wav(input_path: str) -> str :
@@ -43,8 +43,8 @@ def convert_to_wav(input_path: str) -> str :
     audio.export(output_path, format = "wav")
     return output_path
 
-convert_audio_file = convert_to_wav(download_audio_file)
-print(convert_audio_file)
+# convert_audio_file = convert_to_wav(download_audio_file)
+# print(convert_audio_file)
 
 # audio split int chunk
 def chunk_audio(wav_path : str , chunk_minutes: int = 10 ) -> list :
@@ -61,4 +61,15 @@ def chunk_audio(wav_path : str , chunk_minutes: int = 10 ) -> list :
 
     return chunk_list
 
-print(chunk_audio(convert_audio_file))
+def process_input(source: str) -> list: 
+    if source.startswith("http://") or source.startswith("https://"):
+        print("Detected YouTube URL. Downloading audio ... ")
+        wav_path = download_youtube_audio(source)
+    else:
+        print("Detected local file. Converting to WAV ... ")
+        wav_path = convert_to_wav(source)
+
+    print("Chunking audio...")
+    chunks = chunk_audio(wav_path)
+    print(f"Audio ready - {len(chunks)} chunk(s) created.")
+    return chunks
