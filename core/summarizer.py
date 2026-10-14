@@ -5,21 +5,35 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough, RunnableLambda
 
 import os
+import time
+
+MISTRAL_MODEL = os.getenv("MISTRAL_MODEL", "open-mistral-nemo")
 
 def get_llm():
-    return ChatMistralAI(model = "mistral-small-latest", mistral_api_key = os.getenv("MISTRAL_API_KEY"), temperature=0.3)
+    return ChatMistralAI(model=MISTRAL_MODEL, mistral_api_key=os.getenv("MISTRAL_API_KEY"), temperature=0.3)
 
 
 def split_transcript(transcript: str) -> list:
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size = 3000,
-        chunk_overlap = 200
+        chunk_size=4000,
+        chunk_overlap=200
     )
 
     return splitter.split_text(transcript)
 
 def summarize(transcript: str) -> str:
     llm = get_llm()
+
+    chunks = split_transcript(transcript)
+
+    # If short, summarize directly in 1 call to save API calls and avoid rate limits
+    if len(chunks) <= 1:
+        direct_prompt = ChatPromptTemplate.from_messages([
+            ("system", "You are an expert meeting summarizer. Provide a clear, comprehensive meeting summary in bullet points."),
+            ("human", "{text}"),
+        ])
+        direct_chain = direct_prompt | llm | StrOutputParser()
+        return direct_chain.invoke({"text": transcript})
 
     map_prompt = ChatPromptTemplate.from_messages(
         [
@@ -33,9 +47,10 @@ def summarize(transcript: str) -> str:
 
     map_chain = map_prompt | llm | StrOutputParser()
 
-    chunk = split_transcript(transcript)
-
-    chunk_summaries = [map_chain.invoke({"text" : chunk}) for chunk in chunk]  
+    chunk_summaries = []
+    for c in chunks:
+        chunk_summaries.append(map_chain.invoke({"text": c}))
+        time.sleep(0.5)  # safe pacing for free tier rate limits
 
     combined = "\n\n".join(chunk_summaries)
 

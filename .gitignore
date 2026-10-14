@@ -6,3 +6,6 @@
 
 # Downloads folder
 downloads/
+
+# vector database folder
+vector_db/

@@ -1,27 +1,34 @@
 import whisper
 import os
+import torch
 
-WHISPER_MODEL = os.getenv("WHISPER_MODEL","small")
+WHISPER_MODEL = os.getenv("WHISPER_MODEL", "small")
 
 _model = None
 
+def get_device():
+    if torch.cuda.is_available():
+        return "cuda"
+    return "cpu"
+
 def load_model():
-    
     global _model
 
     if _model is None:
-        print(f"loading model...")
-        _model = whisper.load_model(WHISPER_MODEL)
-        print("loaded successfully")
+        device = get_device()
+        print(f"Loading Whisper model '{WHISPER_MODEL}' on device: {device.upper()}...")
+        _model = whisper.load_model(WHISPER_MODEL, device=device)
+        print("Model loaded successfully")
 
     return _model
 
 
-def transcribe_chunk(chunk_path:str, translate:bool = False)-> str:
+def transcribe_chunk(chunk_path: str, translate: bool = False) -> str:
     model = load_model()
     task = "translate" if translate else "transcribe"
+    use_fp16 = torch.cuda.is_available()
 
-    result = model.transcribe(chunk_path, task=task)
+    result = model.transcribe(chunk_path, task=task, fp16=use_fp16)
     return result["text"]
 
 

@@ -7,16 +7,23 @@ from langchain_core.runnables import RunnablePassthrough, RunnableLambda
 
 import os
 
+MISTRAL_MODEL = os.getenv("MISTRAL_MODEL", "open-mistral-nemo")
+
 def get_llm():
-    return ChatMistralAI(model = "mistral-small-latest", mistral_api_key = os.getenv("MISTRAL_API_KEY"), temperature=0.2)
+    return ChatMistralAI(model=MISTRAL_MODEL, mistral_api_key=os.getenv("MISTRAL_API_KEY"), temperature=0.2)
 
 def build_chain(system_prompt: str):
     llm = get_llm()
-    return(
-        RunnablePassthrough() | RunnableLambda(lambda x : {"test" : x}) | ChatPromptTemplate.format_messages([
-            ("system", system_prompt),
-            ("human","{text}"),
-        ]) | llm | StrOutputParser()
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", system_prompt),
+        ("human", "{text}"),
+    ])
+    return (
+        RunnablePassthrough()
+        | RunnableLambda(lambda x: {"text": x})
+        | prompt
+        | llm
+        | StrOutputParser()
     )
 
 
