@@ -1,4 +1,4 @@
-# 🎬 VidSage AI — AI Video & Meeting Assistant with RAG
+# 🎬 VidSage AI — AI Video & Meeting summarize application
 
 [![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-App-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
